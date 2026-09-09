@@ -10,14 +10,30 @@ import traceback
 from pathlib import Path
 
 # ── Resolve paths ──────────────────────────────────────────────
-# When Vercel's root directory is set to SIH-main, this file lives at
-# SIH-main/api/index.py.  __file__.parent.parent gives us SIH-main/.
-_THIS_DIR = Path(__file__).resolve().parent          # .../api/
-_PROJECT_ROOT = _THIS_DIR.parent                      # .../SIH-main/
-_BACKEND_DIR = _PROJECT_ROOT / "backend"
+# The repo structure is:
+#   repo-root/
+#     SIH-main/
+#       api/index.py       ← THIS FILE
+#       backend/main.py    ← FastAPI app
+#
+# __file__ → api/index.py  (relative to wherever Vercel's root is)
+# We try both possible structures:
+#   1. Root = SIH-main/ → backend/ is at ../backend relative to api/
+#   2. Root = repo-root/ → backend/ is at ../SIH-main/backend
 
-# Add backend/ so that main.py's `from services.xxx import …` works
-for p in [str(_BACKEND_DIR), str(_PROJECT_ROOT)]:
+_THIS_DIR = Path(__file__).resolve().parent
+_PARENT = _THIS_DIR.parent
+
+# Try standard layout first (root = SIH-main/)
+_BACKEND_DIR = _PARENT / "backend"
+if not _BACKEND_DIR.exists():
+    # Fallback: root = repo-root/, project is inside SIH-main/
+    _BACKEND_DIR = _PARENT / "SIH-main" / "backend"
+
+_BACKEND_STR = str(_BACKEND_DIR)
+_PARENT_STR = str(_PARENT)
+
+for p in [_BACKEND_STR, _PARENT_STR]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
@@ -25,29 +41,29 @@ for p in [str(_BACKEND_DIR), str(_PROJECT_ROOT)]:
 try:
     from main import app  # backend/main.py
 except Exception as e:
-    # If the real app fails to import, create a minimal FastAPI app
-    # that returns the actual error so we can debug on Vercel
+    # Return the actual error as JSON for debugging
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse
 
     app = FastAPI()
-
-    _import_error = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+    _err = "".join(traceback.format_exception(type(e), e, e.__traceback__))
 
     @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
     async def error_handler(path: str):
         return JSONResponse(
             status_code=500,
             content={
-                "error": "Backend failed to start",
+                "error": "Backend failed to import",
                 "detail": str(e),
-                "traceback": _import_error,
-                "sys_path": sys.path,
-                "backend_dir": str(_BACKEND_DIR),
+                "traceback": _err,
+                "cwd": os.getcwd(),
+                "this_file": str(Path(__file__).resolve()),
+                "backend_dir": _BACKEND_STR,
                 "backend_exists": _BACKEND_DIR.exists(),
                 "backend_contents": (
-                    [f.name for f in _BACKEND_DIR.iterdir()]
+                    sorted(f.name for f in _BACKEND_DIR.iterdir())
                     if _BACKEND_DIR.exists() else []
                 ),
+                "sys_path": sys.path[:10],
             },
         )
