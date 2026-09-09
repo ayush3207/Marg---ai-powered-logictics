@@ -5,15 +5,42 @@
   "installCommand": "cd frontend && npm install",
   "framework": null,
   "rewrites": [
-    { "source": "/recommend-route", "destination": "/api/index" },
-    { "source": "/routes", "destination": "/api/index" },
-    { "source": "/reroute", "destination": "/api/index" },
-    { "source": "/locations", "destination": "/api/index" },
-    { "source": "/location-suggestions", "destination": "/api/index" },
-    { "source": "/health", "destination": "/api/index" },
-    { "source": "/docs", "destination": "/api/index" },
-    { "source": "/openapi.json", "destination": "/api/index" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/recommend-route",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/routes",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/reroute",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/locations",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/location-suggestions",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/docs",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "functions": {
     "api/index.py": {
