@@ -1,0 +1,17 @@
+# Test files
+backend/test_backend_suite.py
+backend/verify_reality_check.py
+brain_test_variation.py
+
+# Dev config
+.git
+.gitignore
+*.md
+
+# Node modules (will be installed by Vercel)
+frontend/node_modules
+
+# Local cache
+__pycache__
+*.pyc
+.pytest_cache
